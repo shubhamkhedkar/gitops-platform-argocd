@@ -1,0 +1,47 @@
+- op: replace
+  path: /spec/replicas
+  value: 2
+- op: replace
+  path: /spec/template/spec/containers/0/resources
+  value:
+    requests:
+      cpu: 100m
+      memory: 64Mi
+    limits:
+      cpu: 500m
+      memory: 128Mi
+- op: replace
+  path: /spec/strategy
+  value:
+    canary:
+      stableService: reservations-api-stable
+      canaryService: reservations-api-canary
+      maxUnavailable: 0
+      maxSurge: 1
+      analysis:
+        templates:
+          - templateName: success-rate
+        args:
+          - name: namespace
+            value: reservations-staging
+          - name: app
+            value: reservations-api
+          - name: threshold
+            value: "0.95"
+        startingStep: 2
+      steps:
+        - setWeight: 25
+        - pause:
+            duration: 1m
+        - analysis:
+            templates:
+              - templateName: success-rate
+            args:
+              - name: namespace
+                value: reservations-staging
+              - name: threshold
+                value: "0.95"
+        - setWeight: 50
+        - pause:
+            duration: 2m
+        - setWeight: 100

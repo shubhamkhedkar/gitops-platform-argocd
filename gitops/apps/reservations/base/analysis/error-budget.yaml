@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: error-budget
+spec:
+  args:
+    - name: namespace
+    - name: app
+      value: reservations-api
+    - name: prometheus-address
+      value: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
+    - name: threshold
+      value: "0.01"
+  metrics:
+    - name: error-ratio
+      interval: 1m
+      count: 5
+      successCondition: result[0] <= {{args.threshold}}
+      failureLimit: 2
+      inconclusiveLimit: 1
+      provider:
+        prometheus:
+          address: "{{args.prometheus-address}}"
+          timeout: 30
+          query: |
+            sum(rate(http_requests_total{app="{{args.app}}",namespace="{{args.namespace}}",code=~"5.."}[2m]))
+            /
+            clamp_min(sum(rate(http_requests_total{app="{{args.app}}",namespace="{{args.namespace}}"}[2m])), 0.001)

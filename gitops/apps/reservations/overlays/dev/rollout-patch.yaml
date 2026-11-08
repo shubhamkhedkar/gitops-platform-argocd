@@ -1,0 +1,25 @@
+- op: replace
+  path: /spec/replicas
+  value: 1
+- op: replace
+  path: /spec/template/spec/containers/0/resources
+  value:
+    requests:
+      cpu: 50m
+      memory: 48Mi
+    limits:
+      cpu: 250m
+      memory: 96Mi
+- op: replace
+  path: /spec/strategy
+  value:
+    canary:
+      stableService: reservations-api-stable
+      canaryService: reservations-api-canary
+      maxUnavailable: 0
+      maxSurge: 1
+      steps:
+        - setWeight: 50
+        - pause:
+            duration: 30s
+        - setWeight: 100

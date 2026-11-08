@@ -1,0 +1,82 @@
+- op: replace
+  path: /spec/replicas
+  value: 4
+- op: replace
+  path: /spec/revisionHistoryLimit
+  value: 10
+- op: replace
+  path: /spec/template/spec/containers/0/resources
+  value:
+    requests:
+      cpu: 200m
+      memory: 128Mi
+    limits:
+      cpu: "1"
+      memory: 256Mi
+- op: add
+  path: /spec/template/spec/topologySpreadConstraints
+  value:
+    - maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: DoNotSchedule
+      labelSelector:
+        matchLabels:
+          app.kubernetes.io/name: reservations-api
+- op: add
+  path: /spec/template/spec/affinity
+  value:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            topologyKey: kubernetes.io/hostname
+            labelSelector:
+              matchLabels:
+                app.kubernetes.io/name: reservations-api
+- op: replace
+  path: /spec/strategy
+  value:
+    canary:
+      stableService: reservations-api-stable
+      canaryService: reservations-api-canary
+      maxUnavailable: 0
+      maxSurge: 1
+      analysis:
+        templates:
+          - templateName: success-rate
+          - templateName: latency-p99
+          - templateName: error-budget
+        args:
+          - name: namespace
+            value: reservations-prod
+          - name: app
+            value: reservations-api
+          - name: threshold
+            value: "0.99"
+        startingStep: 1
+      steps:
+        - setWeight: 20
+        - pause:
+            duration: 2m
+        - analysis:
+            templates:
+              - templateName: success-rate
+              - templateName: latency-p99
+              - templateName: error-budget
+            args:
+              - name: namespace
+                value: reservations-prod
+        - setWeight: 50
+        - pause:
+            duration: 5m
+        - analysis:
+            templates:
+              - templateName: success-rate
+              - templateName: latency-p99
+            args:
+              - name: namespace
+                value: reservations-prod
+        - setWeight: 80
+        - pause:
+            duration: 5m
+        - setWeight: 100

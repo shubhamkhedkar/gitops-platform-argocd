@@ -1,0 +1,31 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: reservations-platform
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: reservations-platform
+    app.kubernetes.io/part-of: gitops-platform
+spec:
+  description: Reservations API across dev, staging and production
+  sourceRepos:
+    - https://github.com/shubhamkhedkar/gitops-platform-argocd.git
+  destinations:
+    - namespace: argocd
+      server: https://kubernetes.default.svc
+    - namespace: reservations-dev
+      server: https://kubernetes.default.svc
+    - namespace: reservations-staging
+      server: https://kubernetes.default.svc
+    - namespace: reservations-prod
+      server: https://kubernetes.default.svc
+    - namespace: monitoring
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"
+  orphanedResources:
+    warn: true

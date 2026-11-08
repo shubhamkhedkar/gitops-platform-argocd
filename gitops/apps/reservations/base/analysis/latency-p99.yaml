@@ -1,0 +1,31 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: latency-p99
+spec:
+  args:
+    - name: namespace
+    - name: app
+      value: reservations-api
+    - name: prometheus-address
+      value: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
+    - name: threshold
+      value: "0.5"
+  metrics:
+    - name: latency-p99
+      interval: 1m
+      count: 5
+      successCondition: result[0] <= {{args.threshold}}
+      failureLimit: 2
+      inconclusiveLimit: 1
+      provider:
+        prometheus:
+          address: "{{args.prometheus-address}}"
+          timeout: 30
+          query: |
+            histogram_quantile(
+              0.99,
+              sum by (le) (
+                rate(http_request_duration_seconds_bucket{app="{{args.app}}",namespace="{{args.namespace}}"}[2m])
+              )
+            )

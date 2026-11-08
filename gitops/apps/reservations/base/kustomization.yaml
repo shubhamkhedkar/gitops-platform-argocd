@@ -1,0 +1,32 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - serviceaccount.yaml
+  - secret.yaml
+  - service-stable.yaml
+  - service-canary.yaml
+  - rollout.yaml
+  - pdb.yaml
+  - servicemonitor.yaml
+  - analysis/success-rate.yaml
+  - analysis/latency-p99.yaml
+  - analysis/error-budget.yaml
+configMapGenerator:
+  - name: reservations-api-config
+    literals:
+      - APP_NAME=reservations-api
+      - APP_ENV=dev
+      - APP_VERSION=1.0.0
+      - LOG_LEVEL=info
+      - PORT=8080
+      - STARTUP_DELAY_MS=0
+      - EXTRA_LATENCY_MS=0
+      - ERROR_RATE=0
+labels:
+  - pairs:
+      app.kubernetes.io/name: reservations-api
+      app.kubernetes.io/part-of: gitops-platform
+      app.kubernetes.io/version: "1.0.0"
+    includeSelectors: false
+configurations:
+  - kustomizeconfig.yaml

@@ -1,0 +1,11 @@
+node_modules/
+*.log
+.env
+.env.*
+!.env.example
+kubeconfig*
+.DS_Store
+coverage/
+*.swp
+tmp/
+dist/

@@ -1,0 +1,17 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: reservations-api
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: reservations-staging.localtest.me
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: reservations-api-stable
+                port:
+                  number: 80

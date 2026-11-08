@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: reservations-staging
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: reservations-staging
+    app.kubernetes.io/part-of: gitops-platform
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: reservations-platform
+  source:
+    repoURL: https://github.com/shubhamkhedkar/gitops-platform-argocd.git
+    targetRevision: main
+    path: gitops/apps/reservations/overlays/staging
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: reservations-staging
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m

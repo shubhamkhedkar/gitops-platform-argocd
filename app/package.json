@@ -1,0 +1,14 @@
+{
+  "name": "reservations-api",
+  "version": "1.0.0",
+  "description": "Zero-dependency Node.js reservations API built for GitOps progressive delivery (health probes, Prometheus metrics, fault injection for canary analysis, graceful shutdown).",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test test/*.test.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT"
+}
